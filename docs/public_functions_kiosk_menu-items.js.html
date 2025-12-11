@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: public/functions/kiosk/menu-items.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: public/functions/kiosk/menu-items.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Represents a single menu item selected by the user.
+ * @class
+ */
+class MenuItem {
+    /**
+     * Creates an instance of MenuItem.
+     * @param {string|number} id - The unique identifier of the item.
+     * @param {string} name - The name of the item.
+     * @param {string} category - The category of the item (e.g., Entree, Side, Drink).
+     */
+    constructor(id, name, category) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.count = 0;
+    }
+}
+
+/**
+ * Retrieves and increments the unique ID for a new entree/entry from local storage.
+ * @returns {number} The new unique entry ID.
+ */
+function getEntreeId() {
+    let id = localStorage.getItem("entreeId") || 0;
+    id = parseInt(id) + 1;
+    localStorage.setItem("entreeId", id);
+    return id;
+}
+
+/**
+ * Represents a complete entry (e.g., a Bowl, Plate, or Al a Carte item) within an order.
+ * @class
+ */
+class Entry {
+    /**
+     * Creates an instance of Entry.
+     * @param {string|number} orderId - The ID of the parent order.
+     * @param {string} size - The size or type of the meal (e.g., "Bowl", "Plate", "Small").
+     * @param {MenuItem[]} menuItems - List of menu items included in this entry.
+     * @param {number} [price=0.0] - The calculated price of this entry.
+     */
+    constructor(orderId, size, menuItems, price=0.0) {
+        this.entryId = getEntreeId();
+        this.orderId = orderId;
+        this.size = size;
+        this.menuItems = menuItems;
+        this.price = price;
+    }
+}
+
+/**
+ * Represents the aggregate order containing all entries and total cost.
+ * @class
+ */
+class TotalOrder {
+    /**
+     * Creates an instance of TotalOrder.
+     * @param {Entry[]} entries - Array of entries in the order.
+     * @param {number} totalPrice - The total accumulated price.
+     */
+    constructor (entries, totalPrice) {
+        this.orderId = localStorage.getItem("orderId");
+        this.entries = entries;
+        this.totalPrice = totalPrice;
+    }
+}
+
+/**
+ * Initializes event listeners when the DOM is fully loaded.
+ * Sets up button click handlers and loads existing selections if editing.
+ */
+document.addEventListener("DOMContentLoaded", () => {
+    // Your code to run after the DOM is fully loaded
+    document.querySelectorAll(".menu-item-button").forEach(button => {
+        button.addEventListener("click", () => selectItem(button));
+    });
+
+    window.sizePopup = document.getElementById("sizePopup");
+
+    loadSelections();
+});
+
+/**  Limits for sides and entrees based on meal type. @type {Object} */
+const limits = window.selectionLimits;
+/**  The current meal type (e.g., "Bowl", "Plate", "Al a Carte"). @type {string} */
+let mealType = window.mealType;
+/**  Destructured limits for sides and entrees. @type {number[]} */
+let [sideLimit, entreeLimit] = limits[mealType] || [0, 0];
+
+/**  Array of currently selected items. @type {MenuItem[]}*/
+let selectedItems  = [];
+/**  Counter for selected entrees. @type {number}*/
+let entrees = 0;
+/**  Counter for selected sides. @type {number} */
+let sides = 0;
+/** Counter for substitutions (sides taking entree slots). @type {number}  */
+let subs  = 0;
+
+/**
+ * Handles the selection of a size for "Al a Carte" items via the popup.
+ * Creates a MenuItem with the selected size and updates the UI.
+ * @param {string} size - The size selected (e.g., "Small", "Medium", "Large").
+ */
+function selectSize(size) {
+    sizePopup.style.display = "none";
+    if (pending) {
+        const {id, name, button} = pending;
+
+        selectedItems.push(new MenuItem(id, name, size));
+        button.classList.add("selected");
+        button.querySelector("#item-count").innerText = size;
+        button.querySelector("#item-count").style.display = "inline";
+        pending = null;
+    }
+}
+
+/**
+ * Displays the size selection popup if available.
+ */
+function showPopup() {
+    if (!sizePopup) return; 
+    sizePopup.style.display = "block";
+}
+
+/**  Temporary storage for an item pending size selection. @type {Object|null} */
+let pending = null;
+
+/**
+ * Handles the click event for a menu item button.
+ * Manages selection logic, including:
+ * - "Al a Carte" popup triggering.
+ * - Toggling drinks and appetizers.
+ * - Enforcing limits for entrees and sides.
+ * - Handling substitutions (extra sides in place of entrees).
+ * @async
+ * @param {HTMLElement} button - The DOM element representing the clicked menu item.
+ */
+async function selectItem(button) {
+    const itemId = button.getAttribute("data-id");
+    const itemCategory = button.getAttribute("data-category");
+    const itemName = button.getAttribute("data-name");
+
+    if (mealType === "Al a Carte") {
+
+        if (button.classList.contains("selected")) {
+            // Deselect the item
+            button.classList.remove("selected");
+            button.querySelector("#item-count").innerText = "0";
+            button.querySelector("#item-count").style.display = "none";
+            selectedItems = selectedItems.filter(item => item.id !== itemId);
+            pending = null;
+            return;
+        }
+        
+        if (selectedItems.length >= 1 || pending) {
+            return;
+        }
+        pending = {id : itemId, name: itemName, button: button};
+        showPopup();
+        return;
+    }
+
+    if (itemCategory === "Drink") {
+        if (button.classList.contains("selected")) {
+            // Deselect the item
+            button.classList.remove("selected");
+            selectedItems = selectedItems.filter(item => item.id !== itemId);
+        } 
+        else {
+            if (selectedItems.length >= 1) {
+                document.querySelectorAll(".selected").forEach(btn => btn.classList.remove("selected"));
+                selectedItems = [];
+            }
+            button.classList.add("selected");
+            selectedItems.push(new MenuItem(itemId, itemName, itemCategory));
+        }
+        return;
+    }
+    else if (itemCategory === "Appetizer") {
+        if (button.classList.contains("selected")) {
+            // Deselect the item
+            button.classList.remove("selected");
+            selectedItems = selectedItems.filter(item => item.id !== itemId);
+        }
+        else {
+            if (selectedItems.length >= 1) {
+                document.querySelectorAll(".selected").forEach(btn => btn.classList.remove("selected"));
+                selectedItems = [];
+            }
+            button.classList.add("selected");
+            selectedItems.push(new MenuItem(itemId, itemName, itemCategory));
+        }
+    }    
+
+    else if (mealType !== "Al a Carte") { // entree and side selection
+
+            // Increase count or deselect
+
+            let count = Number(button.querySelector("#item-count").innerText) || 0;
+            if (itemCategory === "Entree" || itemCategory === "Premium Entree") {
+                if ((entrees + subs) &lt; entreeLimit) {
+                    count++;
+                    entrees++;
+                    selectedItems.push(new MenuItem(itemId, itemName, itemCategory));
+                    button.querySelector("#item-count").innerText = count;
+                    if (button.classList.contains("selected") === false) {
+                        button.classList.add("selected");
+                        button.querySelector("#item-count").style.display = "inline";
+                    }
+                }
+                else {
+                    // Deselect
+                    button.classList.remove("selected");
+                    selectedItems = selectedItems.filter(item => item.id !== itemId);
+                    button.querySelector("#item-count").innerText = "0";
+                    button.querySelector("#item-count").style.display = "none";
+                    entrees = entrees - count;
+                }
+            } 
+            else if (itemCategory === "Side") {
+                if (sides &lt; sideLimit) {
+                    count++;
+                    sides++;
+                    selectedItems.push(new MenuItem(itemId, itemName, itemCategory));
+                    button.querySelector("#item-count").innerText = count;
+                    if (button.classList.contains("selected") === false) {
+                        button.classList.add("selected");
+                        button.querySelector("#item-count").style.display = "inline";
+                    }
+                }
+                else {
+                    if ((entrees + subs) &lt; entreeLimit) {
+                        subs++;
+                        count++;
+
+                        selectedItems.push(new MenuItem(itemId, itemName, itemCategory));
+                        button.querySelector("#item-count").innerText = count;
+                        if (button.classList.contains("selected") === false) {
+                            button.classList.add("selected");
+                            button.querySelector("#item-count").style.display = "inline";
+                        }
+                    }
+                    else {
+                        // Deselect 
+                        button.classList.remove("selected");
+                        selectedItems = selectedItems.filter(item => item.id !== itemId);
+                        button.querySelector("#item-count").innerText = "0";
+                        button.querySelector("#item-count").style.display = "none";
+
+                        if (subs &lt; count) {
+                            sides = sides - (count - subs);
+                            subs = 0;
+                        }
+                        else {subs = subs - count;}                
+                    }
+                }
+            }
+            console.log("entrees:", entrees, "sides:", sides, "subs:", subs);
+        
+        
+    }
+}
+
+/**
+ * Calculates the total price for the selected items, including premium upcharges.
+ * Fetches base price from the server based on meal type.
+ * @async
+ * @param {string} mealType - The type of meal (e.g., "Bowl", "Plate").
+ * @returns {Promise&lt;number>} The calculated total price.
+ */
+async function calcPrice(mealType) {
+    try {
+        const response = await fetch(`get-price?item=${mealType}`);
+        const data = await response.json();
+        console.log("Calculated price:", data.price);
+        totalPrice = Number(data.price);
+
+        for (let item of selectedItems) {
+            if (item.category === "Premium Entree") {
+                totalPrice += 1.50;
+            }
+        }
+        return totalPrice;
+    } catch (error) {
+        console.error("Error calculating price:", error);
+        return 0;
+    }
+}
+
+/**
+ * Validates the order and proceeds to the order summary.
+ * Creates an Entry object, adds it to the TotalOrder in localStorage,
+ * syncs with the server, and redirects the user.
+ * @async
+ */
+async function proceed(){
+    if (selectedItems.length === 0) {
+        alert("Please select at least one item to proceed.");
+        return;
+    }
+
+    if (mealType === "Al a Carte") {
+        mealType = selectedItems[0].category;
+    }
+    let totalPrice = await calcPrice(mealType);
+
+    const orderId = localStorage.getItem("orderId");
+    let orderEntry = new Entry(orderId, mealType, selectedItems, totalPrice);
+
+    let Totalorder = JSON.parse(localStorage.getItem("Totalorder")) || {
+        orderId: localStorage.getItem("orderId"),
+        entries: [],
+        totalPrice: 0.0
+    };
+
+
+    Totalorder.entries.push(orderEntry);
+    Totalorder.totalPrice += totalPrice;
+    localStorage.setItem("Totalorder", JSON.stringify(Totalorder));
+    
+    await fetch('/customer/store-order', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(Totalorder)
+    });
+
+    entrees = 0;
+    sides = 0;
+    selectedItems = [];
+    window.location.href = '../customer/order-details';
+}
+
+/**
+ * Cancels the current selection and returns to the main item selection page.
+ * @async
+ */
+async function goBack() {
+    window.location.href = '/customer/item-selection';
+}
+
+/**
+ * Loads previously selected items if the user is editing an existing entry.
+ * Checks sessionStorage for 'editEntry' data and programmatically updates
+ * the UI buttons and internal counters to match the preserved state.
+ */
+function loadSelections() {
+    const edit = JSON.parse(sessionStorage.getItem('editEntry'));
+    if (edit) {
+
+        if (edit.size === "Appetizer || Drink") {
+            edit.menuItems.forEach(item => {
+                const button = document.querySelector(`button[data-id='${item.id}']`);
+                if (button) {
+                    button.classList.add("selected");
+                    selectedItems.push(new MenuItem(item.id, item.name, item.category));
+                }
+            });
+        }
+        else if (edit.size === 'Small' || edit.size === 'Medium' || edit.size === 'Large') {
+            edit.menuItems.forEach(item => {
+                const button = document.querySelector(`button[data-id='${item.id}']`);
+                if (button) {
+                    button.classList.add("selected");
+                    selectedItems.push(new MenuItem(item.id, item.name, item.category));
+                    button.querySelector("#item-count").innerText = edit.size;
+                    button.querySelector("#item-count").style.display = "inline";
+                }
+            });
+        }
+        else {
+            edit.menuItems.forEach(item => {
+                const button = document.querySelector(`button[data-id='${item.id}']`);
+                if (button) {
+                    button.classList.add("selected");
+                    selectedItems.push(new MenuItem(item.id, item.name, item.category));
+                    count = Number(button.querySelector("#item-count").innerText) || 0;
+                    count++;
+                    button.querySelector("#item-count").innerText = count;
+                    button.querySelector("#item-count").style.display = "inline";
+                    if (item.category === "Entree" || item.category == "Premium Entree") {
+                        entrees++;
+                    } else if (item.category === "Side") {
+                        sides++;
+                        if (sides > sideLimit) {
+                            subs++;
+                        }
+                    }
+                }
+            });
+        }
+    }
+    sessionStorage.removeItem('editEntry');
+}
+
+/**
+ * Window load event handler.
+ * Ensures selections are loaded when the window finishes loading.
+ */
+window.onload = function() {
+    loadSelections();
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_CurrencyExchange.html">API/CurrencyExchange</a></li><li><a href="module-API_Weather.html">API/Weather</a></li><li><a href="module-routes_kitchen.html">routes/kitchen</a></li><li><a href="module-routes_manager.html">routes/manager</a></li><li><a href="module-routes_managerReportRoute_XandZReport.html">routes/managerReportRoute/XandZReport</a></li><li><a href="module-routes_managerReportRoute_managerReports.html">routes/managerReportRoute/managerReports</a></li><li><a href="module-routes_managerReportRoute_productUsageReport.html">routes/managerReportRoute/productUsageReport</a></li><li><a href="module-routes_managerReportRoute_restockReport.html">routes/managerReportRoute/restockReport</a></li><li><a href="module-routes_managerReportRoute_salesReport.html">routes/managerReportRoute/salesReport</a></li><li><a href="module-routes_managerRoute_employees.html">routes/managerRoute/employees</a></li><li><a href="module-routes_managerRoute_inventory.html">routes/managerRoute/inventory</a></li><li><a href="module-routes_managerRoute_menu.html">routes/managerRoute/menu</a></li><li><a href="module-routes_managerRoute_pricing.html">routes/managerRoute/pricing</a></li><li><a href="module-routes_managerRoute_recipes.html">routes/managerRoute/recipes</a></li><li><a href="module-routes_managerRoute_schedule.html">routes/managerRoute/schedule</a></li><li><a href="module-routes_menu=board.html">routes/menu=board</a></li><li><a href="module-routes_newCashier.html">routes/newCashier</a></li><li><a href="module-routes_prep-table.html">routes/prep-table</a></li></ul><h3>Classes</h3><ul><li><a href="Entry.html">Entry</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="Order.html">Order</a></li><li><a href="TotalOrder.html">TotalOrder</a></li><li><a href="module-routes_newCashier-fullEntry.html">fullEntry</a></li></ul><h3>Global</h3><ul><li><a href="global.html#GetLoginScreen">GetLoginScreen</a></li><li><a href="global.html#GoToManagerReports">GoToManagerReports</a></li><li><a href="global.html#GoToManagerView">GoToManagerView</a></li><li><a href="global.html#GoToProductUsageReport">GoToProductUsageReport</a></li><li><a href="global.html#GoToRestock">GoToRestock</a></li><li><a href="global.html#GoToSalesReport">GoToSalesReport</a></li><li><a href="global.html#GoToXReport">GoToXReport</a></li><li><a href="global.html#GoToZReport">GoToZReport</a></li><li><a href="global.html#PostLoginInfo">PostLoginInfo</a></li><li><a href="global.html#RestockItems">RestockItems</a></li><li><a href="global.html#SetZReportTime">SetZReportTime</a></li><li><a href="global.html#authJWT">authJWT</a></li><li><a href="global.html#calcPrice">calcPrice</a></li><li><a href="global.html#cancelOrder">cancelOrder</a></li><li><a href="global.html#closeMissAnythingModal">closeMissAnythingModal</a></li><li><a href="global.html#confirmOrder">confirmOrder</a></li><li><a href="global.html#deleteEntry">deleteEntry</a></li><li><a href="global.html#editEntry">editEntry</a></li><li><a href="global.html#entrees">entrees</a></li><li><a href="global.html#getEntreeId">getEntreeId</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#gotoApps">gotoApps</a></li><li><a href="global.html#gotoDrinks">gotoDrinks</a></li><li><a href="global.html#limits">limits</a></li><li><a href="global.html#loadSelections">loadSelections</a></li><li><a href="global.html#mealType">mealType</a></li><li><a href="global.html#menuItem">menuItem</a></li><li><a href="global.html#openMissAnything">openMissAnything</a></li><li><a href="global.html#orderMore">orderMore</a></li><li><a href="global.html#pending">pending</a></li><li><a href="global.html#proceed">proceed</a></li><li><a href="global.html#removeNotification">removeNotification</a></li><li><a href="global.html#renderProductUsageChart">renderProductUsageChart</a></li><li><a href="global.html#requestHelp">requestHelp</a></li><li><a href="global.html#selectItem">selectItem</a></li><li><a href="global.html#selectSize">selectSize</a></li><li><a href="global.html#selectedItems">selectedItems</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#sides">sides</a></li><li><a href="global.html#startOrder">startOrder</a></li><li><a href="global.html#submitCancellation">submitCancellation</a></li><li><a href="global.html#submitOrder">submitOrder</a></li><li><a href="global.html#subs">subs</a></li><li><a href="global.html#validateOrder">validateOrder</a></li><li><a href="global.html#verifyEmployee">verifyEmployee</a></li><li><a href="global.html#viewBag">viewBag</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Dec 10 2025 22:14:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
