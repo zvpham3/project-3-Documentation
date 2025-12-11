@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Module: routes/managerReportRoute/XandZReport</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Module: routes/managerReportRoute/XandZReport</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+            
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description">X and Z Report routes for manager analytics.Handles cash register reporting for shift management and end-of-day reconciliation.- X Report: Mid-shift report showing hourly sales since last Z Report without clearing totals- Z Report: End-of-day report that displays sales and sets a new baseline timestampUses cookies to track the last Z Report time for accurate reporting windows.</div>
+        
+
+        
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="routes_managerReportRoute_XandZReport.js.html">routes/managerReportRoute/XandZReport.js</a>, <a href="routes_managerReportRoute_XandZReport.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="~GetXReport"><span class="type-signature">(inner) </span>GetXReport<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    GET /manager/managerReports/xAndzReport/xReportGenerates and displays an X Report (mid-shift sales report).Shows hourly sales breakdown since the last Z Report was run.Does not modify any state or clear totals - purely informational.
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="routes_managerReportRoute_XandZReport.js.html">routes/managerReportRoute/XandZReport.js</a>, <a href="routes_managerReportRoute_XandZReport.js.html#line13">line 13</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="~GetZReport"><span class="type-signature">(inner) </span>GetZReport<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    GET /manager/managerReports/xAndzReport/zReportGenerates and displays a Z Report (end-of-day sales report).Shows hourly sales breakdown since the last Z Report.This endpoint displays the report but does not clear totals - use the API endpoint to finalize.
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="routes_managerReportRoute_XandZReport.js.html">routes/managerReportRoute/XandZReport.js</a>, <a href="routes_managerReportRoute_XandZReport.js.html#line46">line 46</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="~SetZReportTime"><span class="type-signature">(inner) </span>SetZReportTime<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    GET /manager/managerReports/xAndzReport/api/set-z-report-timeFinalizes a Z Report by setting the current timestamp as the new baseline.Sets a long-lived cookie to track when the last Z Report was completed.This creates a new reporting window for subsequent X and Z Reports.After setting the timestamp, redirects back to the Z Report view.
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="routes_managerReportRoute_XandZReport.js.html">routes/managerReportRoute/XandZReport.js</a>, <a href="routes_managerReportRoute_XandZReport.js.html#line79">line 79</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="~generateXReport"><span class="type-signature">(async, inner) </span>generateXReport<span class="signature">(latestZReport)</span><span class="type-signature"> &rarr; {Promise.&lt;Array.&lt;Object>>|string|number|number}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Generates an X or Z Report showing hourly sales breakdown.Analyzes orders since the last Z Report timestamp (or since start of current day if no Z Report exists).Groups sales by hour and includes a TOTAL row summarizing all sales in the period.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>latestZReport</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ISO timestamp of the last Z Report, or empty string for current day</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="routes_managerReportRoute_XandZReport.js.html">routes/managerReportRoute/XandZReport.js</a>, <a href="routes_managerReportRoute_XandZReport.js.html#line113">line 113</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        Logs error and returns empty array if database query fails
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+<h5>Returns:</h5>
+<ul>
+        <li>
+<div class="param-desc">
+    Array of objects containing hourly sales data plus total row
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;Array.&lt;Object>></span>
+
+
+    </dd>
+</dl>
+</li>
+    
+        <li>
+<div class="param-desc">
+    returns[].itemName - Hour range (e.g., "09:00 - 09:59") or "TOTAL"
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+</li>
+    
+        <li>
+<div class="param-desc">
+    returns[].qty - Number of orders in this hour/period
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">number</span>
+
+
+    </dd>
+</dl>
+</li>
+    
+        <li>
+<div class="param-desc">
+    returns[].total - Total sales revenue for this hour/period
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">number</span>
+
+
+    </dd>
+</dl>
+</li>
+    </ul>
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_CurrencyExchange.html">API/CurrencyExchange</a></li><li><a href="module-API_Weather.html">API/Weather</a></li><li><a href="module-routes_kitchen.html">routes/kitchen</a></li><li><a href="module-routes_manager.html">routes/manager</a></li><li><a href="module-routes_managerReportRoute_XandZReport.html">routes/managerReportRoute/XandZReport</a></li><li><a href="module-routes_managerReportRoute_managerReports.html">routes/managerReportRoute/managerReports</a></li><li><a href="module-routes_managerReportRoute_productUsageReport.html">routes/managerReportRoute/productUsageReport</a></li><li><a href="module-routes_managerReportRoute_restockReport.html">routes/managerReportRoute/restockReport</a></li><li><a href="module-routes_managerReportRoute_salesReport.html">routes/managerReportRoute/salesReport</a></li><li><a href="module-routes_managerRoute_employees.html">routes/managerRoute/employees</a></li><li><a href="module-routes_managerRoute_inventory.html">routes/managerRoute/inventory</a></li><li><a href="module-routes_managerRoute_menu.html">routes/managerRoute/menu</a></li><li><a href="module-routes_managerRoute_pricing.html">routes/managerRoute/pricing</a></li><li><a href="module-routes_managerRoute_recipes.html">routes/managerRoute/recipes</a></li><li><a href="module-routes_managerRoute_schedule.html">routes/managerRoute/schedule</a></li><li><a href="module-routes_menu=board.html">routes/menu=board</a></li><li><a href="module-routes_newCashier.html">routes/newCashier</a></li><li><a href="module-routes_prep-table.html">routes/prep-table</a></li></ul><h3>Classes</h3><ul><li><a href="Entry.html">Entry</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="Order.html">Order</a></li><li><a href="TotalOrder.html">TotalOrder</a></li><li><a href="module-routes_newCashier-fullEntry.html">fullEntry</a></li></ul><h3>Global</h3><ul><li><a href="global.html#GetLoginScreen">GetLoginScreen</a></li><li><a href="global.html#GoToManagerReports">GoToManagerReports</a></li><li><a href="global.html#GoToManagerView">GoToManagerView</a></li><li><a href="global.html#GoToProductUsageReport">GoToProductUsageReport</a></li><li><a href="global.html#GoToRestock">GoToRestock</a></li><li><a href="global.html#GoToSalesReport">GoToSalesReport</a></li><li><a href="global.html#GoToXReport">GoToXReport</a></li><li><a href="global.html#GoToZReport">GoToZReport</a></li><li><a href="global.html#PostLoginInfo">PostLoginInfo</a></li><li><a href="global.html#RestockItems">RestockItems</a></li><li><a href="global.html#SetZReportTime">SetZReportTime</a></li><li><a href="global.html#authJWT">authJWT</a></li><li><a href="global.html#calcPrice">calcPrice</a></li><li><a href="global.html#cancelOrder">cancelOrder</a></li><li><a href="global.html#confirmOrder">confirmOrder</a></li><li><a href="global.html#deleteEntry">deleteEntry</a></li><li><a href="global.html#editEntry">editEntry</a></li><li><a href="global.html#entrees">entrees</a></li><li><a href="global.html#getEntreeId">getEntreeId</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#limits">limits</a></li><li><a href="global.html#loadSelections">loadSelections</a></li><li><a href="global.html#mealType">mealType</a></li><li><a href="global.html#menuItem">menuItem</a></li><li><a href="global.html#orderMore">orderMore</a></li><li><a href="global.html#pending">pending</a></li><li><a href="global.html#proceed">proceed</a></li><li><a href="global.html#removeNotification">removeNotification</a></li><li><a href="global.html#renderProductUsageChart">renderProductUsageChart</a></li><li><a href="global.html#requestHelp">requestHelp</a></li><li><a href="global.html#selectItem">selectItem</a></li><li><a href="global.html#selectSize">selectSize</a></li><li><a href="global.html#selectedItems">selectedItems</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#sides">sides</a></li><li><a href="global.html#startOrder">startOrder</a></li><li><a href="global.html#submitCancellation">submitCancellation</a></li><li><a href="global.html#submitOrder">submitOrder</a></li><li><a href="global.html#subs">subs</a></li><li><a href="global.html#validateOrder">validateOrder</a></li><li><a href="global.html#verifyEmployee">verifyEmployee</a></li><li><a href="global.html#viewBag">viewBag</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Dec 10 2025 21:53:57 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

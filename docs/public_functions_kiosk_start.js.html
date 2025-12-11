@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: public/functions/kiosk/start.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: public/functions/kiosk/start.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview Client-side logic for handling order initiation and navigation
+ * within the Point of Sale (POS) or Kiosk interface.
+ */
+
+/**
+ * Initiates the new order process.
+ * * This function performs the following actions:
+ * 1. Calculates the center of the clicked button to trigger a specific CSS expansion animation.
+ * 2. Sends a POST request to the backend to create a new order entry.
+ * 3. Waits for both the API response and a minimum animation duration.
+ * 4. Stores the new Order ID in local storage.
+ * 5. Redirects the user to the item selection screen.
+ * * @async
+ * @function startOrder
+ * @returns {Promise&lt;void>} Resolves when the navigation begins or handles errors if the request fails.
+ * @description Relies on DOM elements with ID 'transition-overlay' and class '.start-order-btn'.
+ */
+async function startOrder() {
+   const overlay = document.getElementById('transition-overlay');
+    const button = document.querySelector('.start-order-btn');
+
+    if (overlay &amp;&amp; button) {
+        const rect = button.getBoundingClientRect();
+        const centerX = rect.left + (rect.width / 2);
+        const centerY = rect.top + (rect.height / 2);
+        overlay.style.setProperty('--x', `${centerX}px`);
+        overlay.style.setProperty('--y', `${centerY}px`);
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+        });
+    }
+    const animationTimer = new Promise(resolve => setTimeout(resolve, 320));
+    const totalCost = 0.0;
+    try {
+        const response = await fetch('customer/start-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                employee_id: 103,
+                total_cost: totalCost
+            }),
+        });
+
+        console.log("response:", response.status);
+        const data = await response.json();
+        console.log("data:", data);
+
+        if (response.ok) {
+            const orderId = data.orderId;
+            console.log("Order started with ID:", orderId);
+            localStorage.setItem("orderId", orderId);
+            await animationTimer;
+            window.location.href = `/customer/item-selection?orderId=${orderId}`;
+            if (overlay) overlay.classList.remove('active');
+        } else {
+            console.error("Failed to start order");
+            if (overlay) overlay.classList.remove('active');
+        }
+    } catch (error) {
+        console.error("Error starting order:", error);
+        if (overlay) overlay.classList.remove('active');
+    }
+}
+
+/**
+ * Navigates the current window to the Manager interface.
+ * * @async
+ * @function GoToManagerView
+ * @returns {Promise&lt;void>}
+ */
+async function GoToManagerView() {
+    try {
+        window.location.href = `/manager`;
+    } catch (error) {
+        console.error("Error starting order:", error);
+    }
+}
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-API_CurrencyExchange.html">API/CurrencyExchange</a></li><li><a href="module-API_Weather.html">API/Weather</a></li><li><a href="module-routes_kitchen.html">routes/kitchen</a></li><li><a href="module-routes_manager.html">routes/manager</a></li><li><a href="module-routes_managerReportRoute_XandZReport.html">routes/managerReportRoute/XandZReport</a></li><li><a href="module-routes_managerReportRoute_managerReports.html">routes/managerReportRoute/managerReports</a></li><li><a href="module-routes_managerReportRoute_productUsageReport.html">routes/managerReportRoute/productUsageReport</a></li><li><a href="module-routes_managerReportRoute_restockReport.html">routes/managerReportRoute/restockReport</a></li><li><a href="module-routes_managerReportRoute_salesReport.html">routes/managerReportRoute/salesReport</a></li><li><a href="module-routes_managerRoute_employees.html">routes/managerRoute/employees</a></li><li><a href="module-routes_managerRoute_inventory.html">routes/managerRoute/inventory</a></li><li><a href="module-routes_managerRoute_menu.html">routes/managerRoute/menu</a></li><li><a href="module-routes_managerRoute_pricing.html">routes/managerRoute/pricing</a></li><li><a href="module-routes_managerRoute_recipes.html">routes/managerRoute/recipes</a></li><li><a href="module-routes_managerRoute_schedule.html">routes/managerRoute/schedule</a></li><li><a href="module-routes_menu=board.html">routes/menu=board</a></li><li><a href="module-routes_newCashier.html">routes/newCashier</a></li><li><a href="module-routes_prep-table.html">routes/prep-table</a></li></ul><h3>Classes</h3><ul><li><a href="Entry.html">Entry</a></li><li><a href="MenuItem.html">MenuItem</a></li><li><a href="Order.html">Order</a></li><li><a href="TotalOrder.html">TotalOrder</a></li><li><a href="module-routes_newCashier-fullEntry.html">fullEntry</a></li></ul><h3>Global</h3><ul><li><a href="global.html#GetLoginScreen">GetLoginScreen</a></li><li><a href="global.html#GoToManagerReports">GoToManagerReports</a></li><li><a href="global.html#GoToManagerView">GoToManagerView</a></li><li><a href="global.html#GoToProductUsageReport">GoToProductUsageReport</a></li><li><a href="global.html#GoToRestock">GoToRestock</a></li><li><a href="global.html#GoToSalesReport">GoToSalesReport</a></li><li><a href="global.html#GoToXReport">GoToXReport</a></li><li><a href="global.html#GoToZReport">GoToZReport</a></li><li><a href="global.html#PostLoginInfo">PostLoginInfo</a></li><li><a href="global.html#RestockItems">RestockItems</a></li><li><a href="global.html#SetZReportTime">SetZReportTime</a></li><li><a href="global.html#authJWT">authJWT</a></li><li><a href="global.html#calcPrice">calcPrice</a></li><li><a href="global.html#cancelOrder">cancelOrder</a></li><li><a href="global.html#confirmOrder">confirmOrder</a></li><li><a href="global.html#deleteEntry">deleteEntry</a></li><li><a href="global.html#editEntry">editEntry</a></li><li><a href="global.html#entrees">entrees</a></li><li><a href="global.html#getEntreeId">getEntreeId</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#limits">limits</a></li><li><a href="global.html#loadSelections">loadSelections</a></li><li><a href="global.html#mealType">mealType</a></li><li><a href="global.html#menuItem">menuItem</a></li><li><a href="global.html#orderMore">orderMore</a></li><li><a href="global.html#pending">pending</a></li><li><a href="global.html#proceed">proceed</a></li><li><a href="global.html#removeNotification">removeNotification</a></li><li><a href="global.html#renderProductUsageChart">renderProductUsageChart</a></li><li><a href="global.html#requestHelp">requestHelp</a></li><li><a href="global.html#selectItem">selectItem</a></li><li><a href="global.html#selectSize">selectSize</a></li><li><a href="global.html#selectedItems">selectedItems</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#sides">sides</a></li><li><a href="global.html#startOrder">startOrder</a></li><li><a href="global.html#submitCancellation">submitCancellation</a></li><li><a href="global.html#submitOrder">submitOrder</a></li><li><a href="global.html#subs">subs</a></li><li><a href="global.html#validateOrder">validateOrder</a></li><li><a href="global.html#verifyEmployee">verifyEmployee</a></li><li><a href="global.html#viewBag">viewBag</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Wed Dec 10 2025 21:53:57 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
